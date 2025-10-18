@@ -1,0 +1,205 @@
+== Info:   Trying 10.129.231.81:443...
+== Info: Connected to 10.129.231.81 (10.129.231.81) port 443 (#0)
+== Info: ALPN: offers h2,http/1.1
+=> Send SSL data, 5 bytes (0x5)
+0000: .....
+== Info: TLSv1.3 (OUT), TLS handshake, Client hello (1):
+=> Send SSL data, 512 bytes (0x200)
+0000: .........e...+}..."".Y...d.:...J...... ..K#..1..4..........l..q.
+0040: J.......>.......,.0.........+./...$.(.k.#.'.g.....9.....3.....=.
+0080: <.5./.....u.........................................h2.http/1.1.
+00c0: ........1.....*.(.........................................+.....
+0100: .......-.....3.&.$... .X.E6-.x..I$..N..#.Z.......3..,6..........
+0140: ................................................................
+0180: ................................................................
+01c0: ................................................................
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+== Info: TLSv1.3 (IN), TLS handshake, Server hello (2):
+<= Recv SSL data, 94 bytes (0x5e)
+0000: ...Z..h..............D....I+....z(uZ.f ....5.E.......W..2.....'.
+0040: ......$.0..........h2.........
+== Info: TLSv1.2 (IN), TLS handshake, Certificate (11):
+<= Recv SSL data, 798 bytes (0x31e)
+0000: ..........0...0..............Ug..I\f.h}y.0...*.H........0.1.0...
+0040: U....EXCH010...240805175021Z..290805175021Z0.1.0...U....EXCH010.
+0080: ."0...*.H.............0..........q.........h....h.R......0p/...4
+00c0: ..'.MBV..dw..G.zU,....?"..@.j#{..v)......#.....:.8blA..g....,.OX
+0100: ....V..m....TZ1.>].z.' .{L'....n...o...V/...O.j.....r*...@$.P*..
+0140: .g.H....%.s.....D...........X.3<..x.fe$mV.9.3...2.0.../.4..hZ~..
+0180: ..$....CZ........:J.5................d0b0...U...........0-..U...
+01c0: &0$..EXCH01..EXCH01.inlanefreight.local0...U.%..0...+.......0...
+0200: U.......0.0...*.H...................^.y y....'*8.r..T.RL..r+..C.
+0240: ......+...:9~.......0...W.V.PR{_6.W.NTQ.<&..BJw..r.....C....Z?i(
+0280: .JaQ'...X..).[i.........@hF .....4.....*.....9/.*{:...r...t...>.
+02c0: ..N...'.i;R....gv..IA<.....E......r|...#..p.s..zz.w.:\..5.1v-V..
+0300: .......O...&@<cW.o|.F.....<.rr
+== Info: TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+<= Recv SSL data, 365 bytes (0x16d)
+0000: ...i...a.....JS.G8...!....s..*.qn...0L.6......*...4........KW%..
+0040:  .K...l..{..G.....*..BpWW.!mz........{..s....Y.T....O...K../..Zf
+0080: .........p.p....oM6.4ic......?..p....5..y.ES'.....w<W."..c3....W
+00c0: .....!.G.K2..V.a?....."..K0...P...|b...c.m..........4..j.z. ....
+0100: o.my.....v..1....=.....`nT7..8h.}..Tm.j..$....e.....]....8.}...h
+0140: ...H..CBh>xt.oVl>.H.........)o.....>...Z.,...
+== Info: TLSv1.2 (IN), TLS handshake, Server finished (14):
+<= Recv SSL data, 4 bytes (0x4)
+0000: ....
+=> Send SSL data, 5 bytes (0x5)
+0000: ....f
+== Info: TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+=> Send SSL data, 102 bytes (0x66)
+0000: ...ba..!..#.%.=eG.ik.PK....D>.E...y|_deV...m..O.r....>.........|
+0040: ....p.....Q....h3ep.~.v..:.p/(c,z4)..S
+=> Send SSL data, 5 bytes (0x5)
+0000: .....
+== Info: TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):
+=> Send SSL data, 1 bytes (0x1)
+0000: .
+=> Send SSL data, 5 bytes (0x5)
+0000: ....(
+== Info: TLSv1.2 (OUT), TLS handshake, Finished (20):
+=> Send SSL data, 16 bytes (0x10)
+0000: ....a*{....e;.s+
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....(
+== Info: TLSv1.2 (IN), TLS handshake, Finished (20):
+<= Recv SSL data, 16 bytes (0x10)
+0000: ....`..68.m..f."
+== Info: SSL connection using TLSv1.2 / ECDHE-RSA-AES256-GCM-SHA384
+== Info: ALPN: server accepted h2
+== Info: Server certificate:
+== Info:  subject: CN=EXCH01
+== Info:  start date: Aug  5 17:50:21 2024 GMT
+== Info:  expire date: Aug  5 17:50:21 2029 GMT
+== Info:  issuer: CN=EXCH01
+== Info:  SSL certificate verify result: self-signed certificate (18), continuing anyway.
+=> Send SSL data, 5 bytes (0x5)
+0000: ....X
+== Info: using HTTP/2
+== Info: h2h3 [:method: POST]
+== Info: h2h3 [:path: /autodiscover/autodiscover.json?@test.com/mapi/emsmdb?&Email=autodiscover/autodiscover.json%3F@test.com]
+== Info: h2h3 [:scheme: https]
+== Info: h2h3 [:authority: 10.129.231.81]
+== Info: h2h3 [user-agent: curl/7.88.1]
+== Info: h2h3 [accept: */*]
+== Info: h2h3 [content-type: application/mapi-http]
+== Info: h2h3 [x-requesttype: Connect]
+== Info: h2h3 [x-clientapplication: Outlook/15.1.2176.9]
+== Info: h2h3 [x-requestid: anything]
+== Info: h2h3 [content-length: 277]
+== Info: Using Stream ID: 1 (easy handle 0x561630bf37f0)
+=> Send SSL data, 5 bytes (0x5)
+0000: .....
+=> Send header, 344 bytes (0x158)
+0000: POST /autodiscover/autodiscover.json?@test.com/mapi/emsmdb?&Emai
+0040: l=autodiscover/autodiscover.json%3F@test.com HTTP/2
+0075: Host: 10.129.231.81
+008a: user-agent: curl/7.88.1
+00a3: accept: */*
+00b0: content-type: application/mapi-http
+00d5: x-requesttype: Connect
+00ed: x-clientapplication: Outlook/15.1.2176.9
+0117: x-requestid: anything
+012e: connection: close
+0141: content-length: 277
+0156: 
+=> Send SSL data, 5 bytes (0x5)
+0000: ....6
+=> Send data, 277 bytes (0x115)
+0000: /.o.=.E.X.C.H.0.1. .O.r.g./.o.u.=.E.x.c.h.a.n.g.e. .A.d.m.i.n.i.
+0040: s.t.r.a.t.i.v.e. .G.r.o.u.p. .(.F.Y.D.I.B.O.H.F.2.3.S.P.D.L.T.).
+0080: /.c.n.=.R.e.c.i.p.i.e.n.t.s./.c.n.=.7.4.c.9.e.1.b.1.3.6.b.8.4.8.
+00c0: 7.3.b.8.2.3.2.e.b.7.0.a.a.7.4.4.d.c.-.A.d.m.i.n.i.s.t.r.a.t.o.r.
+0100: .....................
+== Info: We are completely uploaded and fine
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....@
+=> Send SSL data, 5 bytes (0x5)
+0000: ....!
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....!
+<= Recv SSL data, 5 bytes (0x5)
+0000: ....%
+<= Recv SSL data, 5 bytes (0x5)
+0000: .....
+<= Recv header, 13 bytes (0xd)
+0000: HTTP/2 200 
+<= Recv header, 24 bytes (0x18)
+0000: cache-control: private
+<= Recv header, 25 bytes (0x19)
+0000: content-type: text/html
+<= Recv header, 28 bytes (0x1c)
+0000: server: Microsoft-IIS/10.0
+<= Recv header, 50 bytes (0x32)
+0000: request-id: 2728286c-a01f-465d-9e98-3655febcdc15
+<= Recv header, 50 bytes (0x32)
+0000: x-calculatedbetarget: exch01.inlanefreight.local
+<= Recv header, 46 bytes (0x2e)
+0000: x-serverapplication: Exchange/15.02.0721.002
+<= Recv header, 23 bytes (0x17)
+0000: x-requestid: anything
+<= Recv header, 24 bytes (0x18)
+0000: x-requesttype: Connect
+<= Recv header, 33 bytes (0x21)
+0000: x-tunnelexpirationtime: 1800000
+<= Recv header, 24 bytes (0x18)
+0000: x-pendingperiod: 30000
+<= Recv header, 26 bytes (0x1a)
+0000: x-expirationinfo: 300000
+<= Recv header, 20 bytes (0x14)
+0000: x-responsecode: 12
+<= Recv header, 21 bytes (0x15)
+0000: x-failurelid: 52316
+<= Recv header, 102 bytes (0x66)
+0000: x-failuredescription: Connect request body is not formatted corr
+0040: ectly. [ResponseCode=InvalidPayload]
+<= Recv header, 20 bytes (0x14)
+0000: x-diaginfo: EXCH01
+<= Recv header, 20 bytes (0x14)
+0000: x-beserver: EXCH01
+<= Recv header, 29 bytes (0x1d)
+0000: x-aspnet-version: 4.0.30319
+<= Recv header, 125 bytes (0x7d)
+0000: set-cookie: MapiRouting=UlVNOjhmOWI2Y2UxLWU4ZjAtNGZkMy1hNmZkLTk1
+0040: OTdhNWFhNjg1NjpRmQyyXQ7eCA==; path=/mapi/; secure; HttpOnly
+<= Recv header, 135 bytes (0x87)
+0000: set-cookie: MapiContext=MAPIAAAAAOC4+7ODspGjk6GUuYi4laScvI24grCH
+0040: vY6548Dxx/TD+s36y/LCIAAAAAAAAAA=; path=/mapi/emsmdb; secure; Htt
+0080: pOnly
+<= Recv header, 74 bytes (0x4a)
+0000: set-cookie: MapiSequence=0-3FkTfw==; path=/mapi/emsmdb; secure; 
+0040: HttpOnly
+<= Recv header, 107 bytes (0x6b)
+0000: set-cookie: X-BackEndCookie=; expires=Wed, 18-Oct-1995 15:47:51 
+0040: GMT; path=/autodiscover; secure; HttpOnly
+<= Recv header, 23 bytes (0x17)
+0000: x-powered-by: ASP.NET
+<= Recv header, 20 bytes (0x14)
+0000: x-feserver: EXCH01
+<= Recv header, 37 bytes (0x25)
+0000: date: Sat, 18 Oct 2025 15:47:51 GMT
+<= Recv header, 21 bytes (0x15)
+0000: content-length: 988
+<= Recv header, 2 bytes (0x2)
+0000: 
+<= Recv data, 988 bytes (0x3dc)
+0000: Microsoft.Exchange.MapiHttp.InvalidPayloadException: Connect req
+0040: uest body is not formatted correctly. [ResponseCode=InvalidPaylo
+0080: ad] [LID=52316]  ---&gt; Microsoft.Exchange.RpcClientAccess.Buff
+00c0: erParseException: End of buffer reached prematurely.&#13;&#10;  
+0100:  at Microsoft.Exchange.RpcClientAccess.Reader.CheckCanRead(Int32
+0140:  size)&#13;&#10;   at Microsoft.Exchange.RpcClientAccess.Reader.
+0180: ReadArraySegment(UInt32 count)&#13;&#10;   at Microsoft.Exchange
+01c0: .RpcClientAccess.Parser.EmsmdbConnectRequest..ctor(Reader reader
+0200: )&#13;&#10;   at Microsoft.Exchange.MapiHttp.EmsmdbConnectAsyncO
+0240: peration.InternalParseRequest(Reader reader)&#13;&#10;   at Micr
+0280: osoft.Exchange.MapiHttp.AsyncOperation.ParseRequest(WorkBuffer r
+02c0: equestBuffer)&#13;&#10;   at Microsoft.Exchange.MapiHttp.MapiHtt
+0300: pRequestState.&lt;ExecuteRequestAsync&gt;d__39.MoveNext()&#13;&#
+0340: 10;   --- End of inner exception stack trace ---&#13;&#10;   at 
+0380: Microsoft.Exchange.MapiHttp.MapiHttpRequestState.&lt;ExecuteRequ
+03c0: estAsync&gt;d__39.MoveNext()
+== Info: Connection #0 to host 10.129.231.81 left intact
